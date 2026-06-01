@@ -41,7 +41,7 @@ final class SoundController {
             stopGreenSound()
         }
         if state == "waiting" {
-            startRedLoop(playImmediately: playPrompt)
+            startRedAlert(playImmediately: playPrompt)
             return
         }
 
@@ -100,15 +100,14 @@ final class SoundController {
         }
     }
 
-    private func startRedLoop(playImmediately: Bool) {
+    private func startRedAlert(playImmediately: Bool) {
+        redTimer?.invalidate()
+        redTimer = nil
         if playImmediately {
             playOnce("waiting")
         }
-        if redTimer != nil {
-            return
-        }
-        redTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
-            self?.playOnce("waiting")
+        redTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: false) { [weak self] _ in
+            self?.stopRedLoop()
         }
     }
 
@@ -163,6 +162,7 @@ func readState() -> String {
 final class TrafficLightView: NSView {
     var state = readState()
     var blinkOn = true
+    var waitingAlertActive = false
     var isMuted = readMutedPreference()
     var dragStart: NSPoint?
     var onStateCommand: ((String) -> Void)?
@@ -237,7 +237,7 @@ final class TrafficLightView: NSView {
     }
 
     func isBlinkingState() -> Bool {
-        return state == "waiting"
+        return state == "waiting" && waitingAlertActive
     }
 
     func isLightVisible(_ light: String) -> Bool {
@@ -443,6 +443,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var window: NSWindow!
     var view: TrafficLightView!
     var lastModified = Date.distantPast
+    var waitingBlinkStopTimer: Timer?
     let soundController = SoundController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -487,13 +488,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSApp.terminate(nil)
             return
         }
-        if next != view.state {
+        if next != view.state || next == "waiting" {
             applyState(next, playPrompt: true, writeFile: false)
         }
     }
 
     func blink() {
-        guard view.state == "waiting" else {
+        guard view.state == "waiting" && view.waitingAlertActive else {
             if !view.blinkOn {
                 view.blinkOn = true
                 view.needsDisplay = true
@@ -520,8 +521,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         view.state = state
         view.blinkOn = true
+        if state == "waiting" {
+            startWaitingBlinkTimer()
+        } else {
+            stopWaitingBlinkTimer()
+        }
         view.needsDisplay = true
         soundController.apply(state: state, playPrompt: playPrompt)
+    }
+
+    func startWaitingBlinkTimer() {
+        waitingBlinkStopTimer?.invalidate()
+        view.waitingAlertActive = true
+        waitingBlinkStopTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: false) { [weak self] _ in
+            guard let self else { return }
+            self.view.waitingAlertActive = false
+            self.view.blinkOn = true
+            self.view.needsDisplay = true
+        }
+    }
+
+    func stopWaitingBlinkTimer() {
+        waitingBlinkStopTimer?.invalidate()
+        waitingBlinkStopTimer = nil
+        view.waitingAlertActive = false
     }
 
     func toggleMute() {
