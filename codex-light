@@ -1,0 +1,12 @@
+#!/bin/zsh
+SOURCE="$0"
+while [ -L "$SOURCE" ]; do
+  DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+  TARGET="$(readlink "$SOURCE")"
+  case "$TARGET" in
+    /*) SOURCE="$TARGET" ;;
+    *) SOURCE="$DIR/$TARGET" ;;
+  esac
+done
+cd "$(cd -P "$(dirname "$SOURCE")" && pwd)"
+python3 codex_light.py "$@"

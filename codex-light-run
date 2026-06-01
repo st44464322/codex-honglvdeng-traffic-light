@@ -1,0 +1,30 @@
+#!/bin/zsh
+set -u
+
+SOURCE="$0"
+while [ -L "$SOURCE" ]; do
+  DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+  TARGET="$(readlink "$SOURCE")"
+  case "$TARGET" in
+    /*) SOURCE="$TARGET" ;;
+    *) SOURCE="$DIR/$TARGET" ;;
+  esac
+done
+DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+
+if [ "$#" -eq 0 ]; then
+  echo "用法：codex-light-run <command> [args...]"
+  exit 2
+fi
+
+"$DIR/codex-light" working >/dev/null 2>&1 || true
+"$@"
+exit_code=$?
+
+if [ "$exit_code" -eq 0 ]; then
+  "$DIR/codex-light" done >/dev/null 2>&1 || true
+else
+  "$DIR/codex-light" waiting >/dev/null 2>&1 || true
+fi
+
+exit "$exit_code"

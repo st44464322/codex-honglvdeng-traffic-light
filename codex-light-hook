@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from datetime import datetime
+from pathlib import Path
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+LIGHT = os.environ.get("CODEX_LIGHT_PATH") or str(SCRIPT_DIR / "codex-light")
+if not os.path.exists(LIGHT):
+    LIGHT = shutil.which("codex-light") or LIGHT
+STATE_PATH = os.path.expanduser("~/Library/Application Support/CodexTrafficLight/state.json")
+LOG_PATH = os.path.expanduser("~/Library/Application Support/CodexTrafficLight/hook.log")
+
+
+def log(message):
+    try:
+        os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
+        with open(LOG_PATH, "a", encoding="utf-8") as handle:
+            handle.write(f"{datetime.now().isoformat(timespec='seconds')} {message}\n")
+    except Exception:
+        pass
+
+
+def read_event():
+    raw = sys.stdin.read()
+    if not raw.strip():
+        return {}
+    try:
+        return json.loads(raw)
+    except Exception as exc:
+        log(f"invalid-json {exc}")
+        return {}
+
+
+def current_state():
+    try:
+        with open(STATE_PATH, "r", encoding="utf-8") as handle:
+            return json.load(handle).get("state")
+    except Exception:
+        return None
+
+
+def set_light(state):
+    try:
+        subprocess.run([LIGHT, state], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+        log(f"set {state}")
+    except Exception as exc:
+        log(f"set-failed {state} {exc}")
+
+
+def looks_waiting(message):
+    if not message:
+        return False
+    patterns = [
+        r"等你",
+        r"需要你",
+        r"需要.*?(回复|确认|授权|登录|验证码|文件|截图|选择|提供|补充)",
+        r"请.*?(回复|确认|授权|登录|提供|发我|补充|选择)",
+        r"你.*?(确认|选择|提供|发我|补充).*?吗",
+        r"要不要|可以吗|行不行|是否",
+        r"我需要.*?(你|确认|授权|文件|截图|验证码)",
+        r"blocked|waiting for user|permission|approval",
+        r"\?",
+        r"？",
+    ]
+    return any(re.search(pattern, message, re.IGNORECASE | re.DOTALL) for pattern in patterns)
+
+
+event = read_event()
+name = event.get("hook_event_name") or (sys.argv[1] if len(sys.argv) > 1 else "")
+log(f"event {name}")
+
+if name in {"UserPromptSubmit", "PreToolUse"}:
+    set_light("working")
+elif name == "PermissionRequest":
+    set_light("waiting")
+elif name in {"Stop", "SubagentStop"}:
+    message = event.get("last_assistant_message") or ""
+    if current_state() == "waiting" or looks_waiting(message):
+        set_light("waiting")
+    else:
+        set_light("done")
+
+print("{}")

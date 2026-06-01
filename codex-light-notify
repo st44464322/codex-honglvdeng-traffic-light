@@ -1,0 +1,33 @@
+#!/bin/zsh
+set -u
+
+SOURCE="$0"
+while [ -L "$SOURCE" ]; do
+  DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+  TARGET="$(readlink "$SOURCE")"
+  case "$TARGET" in
+    /*) SOURCE="$TARGET" ;;
+    *) SOURCE="$DIR/$TARGET" ;;
+  esac
+done
+DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+
+ORIGINAL="${CODEX_LIGHT_NOTIFY_ORIGINAL:-}"
+LIGHT="${CODEX_LIGHT_PATH:-$DIR/codex-light}"
+EVENT="${1:-}"
+
+if [ "${CODEX_LIGHT_NOTIFY_SKIP_ORIGINAL:-0}" != "1" ] && [ -n "$ORIGINAL" ] && [ -x "$ORIGINAL" ]; then
+  "$ORIGINAL" "$@" >/dev/null 2>&1 || true
+fi
+
+case "$EVENT" in
+  turn-start)
+    "$LIGHT" working >/dev/null 2>&1 || true
+    ;;
+  turn-ended)
+    current="$("$LIGHT" status 2>/dev/null || echo idle)"
+    if [ "$current" = "working" ]; then
+      "$LIGHT" done >/dev/null 2>&1 || true
+    fi
+    ;;
+esac

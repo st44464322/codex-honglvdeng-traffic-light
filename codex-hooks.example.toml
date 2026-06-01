@@ -1,0 +1,40 @@
+# Add this to ~/.codex/config.toml if you want Codex hooks to update the light.
+# After adding hooks, open Codex and run /hooks once to review/trust them.
+
+[[hooks.UserPromptSubmit]]
+[[hooks.UserPromptSubmit.hooks]]
+type = "command"
+command = "$HOME/.codex/bin/codex-light-hook UserPromptSubmit"
+timeout = 5
+statusMessage = "Codex traffic light: working"
+
+[[hooks.PreToolUse]]
+matcher = ".*"
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = "$HOME/.codex/bin/codex-light-hook PreToolUse"
+timeout = 5
+statusMessage = "Codex traffic light: working"
+
+[[hooks.PermissionRequest]]
+matcher = ".*"
+[[hooks.PermissionRequest.hooks]]
+type = "command"
+command = "$HOME/.codex/bin/codex-light-hook PermissionRequest"
+timeout = 5
+statusMessage = "Codex traffic light: waiting"
+
+[[hooks.Stop]]
+[[hooks.Stop.hooks]]
+type = "command"
+command = "$HOME/.codex/bin/codex-light-hook Stop"
+timeout = 5
+statusMessage = "Codex traffic light: done"
+
+[[hooks.SubagentStop]]
+matcher = ".*"
+[[hooks.SubagentStop.hooks]]
+type = "command"
+command = "$HOME/.codex/bin/codex-light-hook SubagentStop"
+timeout = 5
+statusMessage = "Codex traffic light: subagent done"
