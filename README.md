@@ -50,7 +50,7 @@ codex-light.command
 ## Install
 
 ```bash
-git clone https://github.com/YOUR_NAME/codex-honglvdeng-traffic-light.git
+git clone https://github.com/st44464322/codex-honglvdeng-traffic-light.git
 cd codex-honglvdeng-traffic-light
 ./build.command
 ./install-autostart.command
