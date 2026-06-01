@@ -20,6 +20,14 @@ let designHeight: CGFloat = 522
 let uiScale: CGFloat = 7.0 / 12.0
 let scaledWidth = designWidth * uiScale
 let scaledHeight = designHeight * uiScale
+let doneAutoIdleSeconds: TimeInterval = {
+    if let raw = ProcessInfo.processInfo.environment["CODEX_LIGHT_DONE_IDLE_SECONDS"],
+       let seconds = TimeInterval(raw),
+       seconds > 0 {
+        return seconds
+    }
+    return 10 * 60
+}()
 
 final class SoundController {
     private let sounds: [String: NSSound?] = [
@@ -444,6 +452,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var view: TrafficLightView!
     var lastModified = Date.distantPast
     var waitingBlinkStopTimer: Timer?
+    var doneAutoIdleTimer: Timer?
     let soundController = SoundController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -526,6 +535,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             stopWaitingBlinkTimer()
         }
+        if state == "done" {
+            startDoneAutoIdleTimer()
+        } else {
+            stopDoneAutoIdleTimer()
+        }
         view.needsDisplay = true
         soundController.apply(state: state, playPrompt: playPrompt)
     }
@@ -545,6 +559,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         waitingBlinkStopTimer?.invalidate()
         waitingBlinkStopTimer = nil
         view.waitingAlertActive = false
+    }
+
+    func startDoneAutoIdleTimer() {
+        doneAutoIdleTimer?.invalidate()
+        doneAutoIdleTimer = Timer.scheduledTimer(withTimeInterval: doneAutoIdleSeconds, repeats: false) { [weak self] _ in
+            guard let self, self.view.state == "done" else { return }
+            self.applyState("idle", playPrompt: false, writeFile: true)
+        }
+    }
+
+    func stopDoneAutoIdleTimer() {
+        doneAutoIdleTimer?.invalidate()
+        doneAutoIdleTimer = nil
     }
 
     func toggleMute() {

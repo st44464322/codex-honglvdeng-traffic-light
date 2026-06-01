@@ -7,7 +7,7 @@ Codex 红绿灯 / Codex Traffic Light
 A tiny floating macOS traffic light for Codex status:
 
 - Yellow: Codex is working.
-- Green: work is done and ready to review.
+- Green: work is done and ready to review, then auto-idles after 10 minutes.
 - Red: Codex is waiting for your reply, approval, or missing input.
 
 状态文件保存在：
@@ -25,7 +25,7 @@ A tiny floating macOS traffic light for Codex status:
 ## 状态含义
 
 - 黄灯常亮：Codex 正在干活，先别催。
-- 绿灯常亮：任务完成，可以验收。
+- 绿灯常亮：任务完成，可以验收；10 分钟后自动变为空闲。
 - 红灯先闪烁 10 秒，之后常亮：等你回复、确认、授权或补文件。
 - 全暗：空闲。
 
@@ -136,7 +136,7 @@ codex-light-run python3 your_script.py
 当前目录的 `AGENTS.md` 已经写入红绿灯规则。后续在这个工作区执行开发、脚本、自动化、文件处理等任务时，默认按这个规则切灯：
 
 - 开始任务：`codex-light working`
-- 完成可验收：`codex-light done`
+- 完成可验收：`codex-light done`，10 分钟后自动空闲
 - 等你确认：`codex-light waiting`
 - 空闲：`codex-light idle`
 
@@ -152,7 +152,7 @@ codex-light-hook
 
 - `UserPromptSubmit` / `PreToolUse`：自动黄灯。
 - `PermissionRequest`：自动红灯。
-- `Stop`：自动绿灯；如果最后回复像是在等用户确认，会保持红灯。
+- `Stop`：自动绿灯；如果最后回复像是在等用户确认，会保持红灯。绿灯保持 10 分钟后自动空闲。
 
 参考 `codex-hooks.example.toml`，把内容加入 `~/.codex/config.toml` 后，打开 Codex 执行 `/hooks` 信任一次。
 
