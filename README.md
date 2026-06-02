@@ -31,7 +31,7 @@ A tiny floating macOS traffic light for Codex status:
 
 ## 提示声
 
-- 黄灯：轻提示音 `Tink`，响一次。
+- 黄灯：无提示声，只亮灯。
 - 绿灯：完成提示音 `Glass`，播放 3 秒。
 - 红灯：等待提示音 `Basso`，只提醒 10 秒，之后停止声音和闪烁。
 

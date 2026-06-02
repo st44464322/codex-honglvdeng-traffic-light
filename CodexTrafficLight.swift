@@ -31,7 +31,6 @@ let doneAutoIdleSeconds: TimeInterval = {
 
 final class SoundController {
     private let sounds: [String: NSSound?] = [
-        "working": NSSound(named: NSSound.Name("Tink")),
         "done": NSSound(named: NSSound.Name("Glass")),
         "waiting": NSSound(named: NSSound.Name("Basso"))
     ]
