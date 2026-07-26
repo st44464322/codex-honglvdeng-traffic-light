@@ -78,7 +78,11 @@ if name in {"UserPromptSubmit", "PreToolUse"}:
     set_light("working")
 elif name == "PermissionRequest":
     set_light("waiting")
-elif name in {"Stop", "SubagentStop"}:
+elif name == "SubagentStop":
+    # A child agent finishing does not mean the parent task is complete.
+    # Keep the current light unchanged so no completion sound is triggered.
+    log("ignored subagent completion; parent task still owns the light")
+elif name == "Stop":
     message = event.get("last_assistant_message") or ""
     if current_state() == "waiting" or looks_waiting(message):
         set_light("waiting")

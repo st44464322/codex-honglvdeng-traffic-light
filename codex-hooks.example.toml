@@ -37,4 +37,4 @@ matcher = ".*"
 type = "command"
 command = "$HOME/.codex/bin/codex-light-hook SubagentStop"
 timeout = 5
-statusMessage = "Codex traffic light: subagent done"
+statusMessage = "Codex traffic light: subagent done silently"
