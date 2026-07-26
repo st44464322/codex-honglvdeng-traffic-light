@@ -152,6 +152,7 @@ codex-light-hook
 
 - `UserPromptSubmit` / `PreToolUse`：自动黄灯。
 - `PermissionRequest`：自动红灯。
+- `SubagentStop`：子智能体结束时保持当前灯不变，全程静默。
 - `Stop`：自动绿灯；如果最后回复像是在等用户确认，会保持红灯。绿灯保持 10 分钟后自动空闲。
 
 参考 `codex-hooks.example.toml`，把内容加入 `~/.codex/config.toml` 后，打开 Codex 执行 `/hooks` 信任一次。
